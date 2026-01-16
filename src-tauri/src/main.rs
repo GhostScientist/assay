@@ -2,6 +2,7 @@
 
 mod commands;
 mod db;
+mod eval;
 mod project;
 
 fn main() {
@@ -9,7 +10,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::create_project,
             commands::open_project,
-            commands::list_projects
+            commands::list_projects,
+            commands::list_evals
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

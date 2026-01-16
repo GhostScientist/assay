@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 
 type ProjectInfo = {
   id: string;
@@ -10,11 +10,19 @@ type ProjectInfo = {
   db_path: string;
 };
 
+type EvalSummary = {
+  id: string;
+  name: string;
+  description?: string;
+  path: string;
+};
+
 export default function App() {
   const [projectPath, setProjectPath] = useState("");
   const [projectName, setProjectName] = useState("");
   const [rootPath, setRootPath] = useState("");
   const [status, setStatus] = useState("Ready.");
+  const [evals, setEvals] = useState<EvalSummary[]>([]);
 
   const createProject = async () => {
     setStatus("Creating project...");
@@ -53,6 +61,19 @@ export default function App() {
     }
   };
 
+  const listEvals = async () => {
+    setStatus("Listing evals...");
+    try {
+      const result = await invoke<EvalSummary[]>("list_evals", {
+        project_path: projectPath
+      });
+      setEvals(result);
+      setStatus(JSON.stringify(result, null, 2));
+    } catch (error) {
+      setStatus(String(error));
+    }
+  };
+
   return (
     <div className="app">
       <header className="app__header">
@@ -67,7 +88,9 @@ export default function App() {
             Project Path
             <input
               value={projectPath}
-              onChange={(event) => setProjectPath(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setProjectPath(event.target.value)
+              }
               placeholder="/Users/you/Dev/my-assay-project"
             />
           </label>
@@ -75,7 +98,9 @@ export default function App() {
             Project Name
             <input
               value={projectName}
-              onChange={(event) => setProjectName(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setProjectName(event.target.value)
+              }
               placeholder="Safety Audit"
             />
           </label>
@@ -97,7 +122,9 @@ export default function App() {
             Root Folder
             <input
               value={rootPath}
-              onChange={(event) => setRootPath(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setRootPath(event.target.value)
+              }
               placeholder="/Users/you/Dev"
             />
           </label>
@@ -107,6 +134,34 @@ export default function App() {
             </button>
           </div>
         </div>
+      </section>
+
+      <section className="app__section">
+        <h2>Eval Definitions</h2>
+        <p>Reads YAML files from the project's `evals/` directory.</p>
+        <div className="button-row">
+          <button type="button" onClick={listEvals}>
+            List Evals
+          </button>
+        </div>
+        {evals.length > 0 ? (
+          <div className="eval-list">
+            {evals.map((evalItem: EvalSummary) => (
+              <div className="eval-card" key={evalItem.id}>
+                <strong>{evalItem.name}</strong>
+                <span className="eval-id">{evalItem.id}</span>
+                {evalItem.description ? (
+                  <p>{evalItem.description}</p>
+                ) : (
+                  <p className="muted">No description.</p>
+                )}
+                <code>{evalItem.path}</code>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">No evals loaded.</p>
+        )}
       </section>
 
       <section className="app__section">

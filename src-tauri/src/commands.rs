@@ -1,4 +1,5 @@
 use crate::db;
+use crate::eval;
 use crate::project;
 use std::path::PathBuf;
 
@@ -22,4 +23,10 @@ pub fn open_project(path: String) -> Result<project::ProjectInfo, String> {
 pub fn list_projects(root_path: String) -> Result<Vec<project::ProjectInfo>, String> {
     let root = PathBuf::from(root_path);
     project::list_projects(&root)
+}
+
+#[tauri::command]
+pub fn list_evals(project_path: String) -> Result<Vec<eval::EvalSummary>, String> {
+    let path = PathBuf::from(project_path);
+    eval::list_eval_summaries(&path)
 }
